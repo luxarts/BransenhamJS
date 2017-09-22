@@ -1,0 +1,57 @@
+<style type="text/css">
+	#canvas-container{
+		width: 100%;
+		text-align: center;
+	}
+	#cuadricula{
+		border: 1px solid black;
+		display: inline;
+		margin: 10px;
+	}
+	#controles{
+		padding: 20px;
+		margin: 10px auto;
+		width: 200px;
+		height: 100px;
+		background: #bbb;
+	}
+	#col1{
+		float: left;
+	}
+	span{
+		font-size: 18px;
+	}
+	#col2{
+		float: right;
+	}
+	input{
+		height: 21px;
+		width: 100px;
+	}
+</style>
+
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Test Bransenham</title>
+	<meta charset="utf-8">
+</head>
+<body>
+	<div id="canvas-container"><canvas id="cuadricula"></canvas></div>
+	<div id="controles">
+		<div id="col1">
+			<span>X1:</span><br>
+			<span>Y1:</span><br>
+			<span>X2:</span><br>
+			<span>Y2:</span><br>
+		</div>
+		<div id="col2">
+			<input type="text" id="x1" onchange="redraw();"><br>
+			<input type="text" id="y1" onchange="redraw();"><br>
+			<input type="text" id="x2" onchange="redraw();"><br>
+			<input type="text" id="y2" onchange="redraw();">
+		</div>
+	</div>
+</body>
+<script type="text/javascript" src="main.js"></script>
+</html>
