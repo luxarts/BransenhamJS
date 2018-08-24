@@ -2,9 +2,9 @@
 		2017
 https://github.com/luxarts/BransenhamJS
 */
-var pxSize=15;		//Tamaño del pixel
-var dimensionX=20;	//Cantidad de píxeles horizontal
-var dimensionY=20;	//Cantidad de píxeles vertical
+var pxSize=10;		//Tamaño del pixel
+var dimensionX=50;	//Cantidad de píxeles horizontal
+var dimensionY=50;	//Cantidad de píxeles vertical
 var borderWidth=1;	//Grosor de las lineas divisoras
 
 dimensionX=(dimensionX+1)*pxSize;//Tamaño de la cuadrícula (X)
@@ -46,90 +46,127 @@ function redraw(){
 		//Dibuja la cuadrícula
 		cuadricula();
 		//Dibuja la linea
-		linea(x1,y1,x2,y2);
+		line(x1,y1,x2,y2, "#F00");
 	}
 }
 
-function linea(x1, y1, x2, y2){
-	ctx.fillStyle="#F00";
+function line(x0, y0, x1, y1, color){
+	var backup;
 
-	var incyi, incxi;	//Incrementos inclinados
-	var incyr, incxr;	//Incrementos rectos
-	var dy=y2-y1;	//Delta Y (distancia en el eje Y)
-	var dx=x2-x1;	//Delta x (distancia en el eje x)
+	y0 = -y0;
+	y1 = -y1;
 
-	if(dy>=0){
-		incyi=1;
+	var steep = Math.abs(y1 - y0) > Math.abs(x1 - x0);
+	if(steep){
+		//Intercambia x0 con y0
+		backup = x0;
+		x0 = y0;
+		y0 = backup;
+		//Intercambia x1 con y1
+		backup = x1;
+		x1 = y1;
+		y1 = backup;
 	}
-	else{
-		dy=-dy;
-		incyi=-1;
-	}
-	if(dx>=0){
-		incxi=1;
-	}
-	else{
-		dx=-dx;
-		incxi=-1;
-	}
-	if(dx>=dy){
-		incyr=0;
-		incxr=incxi;
-	}
-	else{
-		incxr=0;
-		incyr=incyi;
-		var dummy=dx;//Intercambia dx con dy
-		dx=dy;
-		dy=dummy;
+	if(x0 > x1){
+		//Intercambia x0 con x1
+		backup = x0;
+		x0 = x1;
+		x1 = backup;
+		//Intercambia y0 con y1
+		backup = y0;
+		y0 = y1;
+		y1 = backup;
 	}
 
-	//Inicializa valores
-	var x=x1;
-	var y=y1;
-	var avr=(2*dy);
-	var av=avr-dx;
-	var avi=av-dx;
+	var dx, dy;
+	dx = x1 - x0;
+	dy = Math.abs(y1 - y0);
+
+	var err = dx / 2;
+	var ystep;
+
+	if(y0 < y1)
+		ystep = 1;
+	else
+		ystep = -1;
+
+	var xbegin = x0;
+	if(steep){
+		for(; x0 <= x1; x0++){
+			err -= dy;
+			if(err < 0){
+				var len = x0 - xbegin;
+				if(len)
+					gfx_vline(y0, xbegin, len + 1, color);
+				else
+					gfx_pixel(y0, x0, color);
+
+				xbegin = x0 + 1;
+				y0 += ystep;
+				err += dx;
+			}
+		}
+		if(x0 > xbegin + 1) gfx_vline(y0, xbegin, x0 - xbegin, color);
+	}
+	else{
+		for(; x0 <= x1; x0++){
+			err -= dy;
+			if(err < 0){
+				var len = x0 - xbegin;
+				if(len)
+					gfx_hline(xbegin, y0, len + 1, color);
+				else
+					gfx_pixel(x0, y0, color);
+
+				xbegin = x0 + 1;
+				y0 += ystep;
+				err += dx;
+			}
+		}
+		if(x0 > xbegin + 1) gfx_hline(xbegin, y0, x0 - xbegin, color);
+	}
+}
+
+function gfx_pixel(x, y, color){
+	ctx.fillStyle=color;
 	var offsetx=dimensionX/2 - pxSize/2;//Centro de la cuadrícula (X)
 	var offsety=dimensionY/2 - pxSize/2;//Centro de la cuadrícula (Y)
-	do{
-		ctx.fillRect(x*pxSize+offsetx,-y*pxSize+offsety,pxSize,pxSize); //Dibuja un pixel
-
-		if(av>=0){
-			x+=incxi;//Aumento inclinado
-			y+=incyi;//Aumento recto
-			av+=avi;//Avance inclinado
-		}
-		else{
-			x+=incxr;//Aumento recto
-			y+=incyr;//Aumento inclinado
-			av+=avr;//Avance recto
-		}
-	}while(x!=x2&& (x1!=x2 || y1!=y2));
-	if(x1!=x2 || y1!=y2)ctx.fillRect(x*pxSize+offsetx,-y*pxSize+offsety,pxSize,pxSize); //Dibuja el último pixel
+	ctx.fillRect(x*pxSize+offsetx, y*pxSize+offsety, pxSize, pxSize); //Dibuja un pixel
+}
+function gfx_hline(x0, y0, w, color){
+	while(w>0){
+		w--;
+		gfx_pixel(x0+w, y0, color);
+	}
+}
+function gfx_vline(x0, y0, h, color){
+	while(h>0){
+		h--;
+		gfx_pixel(x0, y0+h, color);
+	}
 }
 
-setInterval(girar,100); //Llama a girar cada 500ms
+setInterval(girar,250); //Llama a girar cada 500ms
 var x2=0+1;
-var y2=Math.floor(dimensionY/(pxSize*2));
+var y2=Math.floor(dimensionY/(pxSize*2)-1);
 var incx=1;
 var incy=0;
 
 function girar(){
 	draw(x2,y2);
-	if(x2==Math.floor(dimensionX/(pxSize*2))){//Abajo
+	if(x2==Math.floor(dimensionX/(pxSize*2))-1){//Abajo
 		incx=0;
 		incy=-1;
 	}
-	if(y2==Math.floor(-dimensionY/(pxSize*2))+1){//Izquierda
+	if(y2==Math.floor(-dimensionY/(pxSize*2))+2){//Izquierda
 		incy=0;
 		incx=-1;
 	}
-	if(x2==Math.floor(-dimensionX/(pxSize*2))+1){//Arriba
+	if(x2==Math.floor(-dimensionX/(pxSize*2))+2){//Arriba
 		incx=0;
 		incy=1;
 	}
-	if(y2==Math.floor(dimensionY/(pxSize*2)) && incy==1){//Derecha
+	if(y2==Math.floor(dimensionY/(pxSize*2))-1 && incy==1){//Derecha
 		incy=0;
 		incx=1;
 	}
@@ -144,7 +181,7 @@ function draw(x2,y2){
 	//Dibuja la cuadrícula
 	cuadricula();
 	//Dibuja la linea
-	linea(0,0,Math.floor(x2),Math.floor(y2));
+	line(0, 0, Math.floor(x2), Math.floor(y2), "#F00");
 	document.getElementById("x1").value = 0;
 	document.getElementById("y1").value = 0;
 	document.getElementById("x2").value = x2;
